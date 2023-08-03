@@ -73,12 +73,37 @@ namespace HealthAndDamageScalingPatcher
                     throw RecordException.Enrich(ex, oldCreature);
                 }
             }
+            // Weapons
+            foreach (var oldWeapon in state.LoadOrder.PriorityOrder.WinningOverrides<IWeaponGetter>())
+            {
+                try
+                {
+                    if (oldWeapon.Data == null || oldWeapon.EditorID == null)
+                        continue;
+
+                    var newWeapon = oldWeapon.DeepCopy();
+                
+                    if (newWeapon.Data?.Damage == null || newWeapon.Data.Type == Weapon.WeaponType.Bow || newWeapon.Data.Type == Weapon.WeaponType.Staff)
+                        continue;
+
+                    newWeapon.Data.Damage = (ushort)(newWeapon.Data.Damage * Settings.MeleeDmgMult + Settings.MeleeDmgBonus);
+
+                    state.PatchMod.Weapons.Set(newWeapon);
+                    Console.WriteLine($"Successfully modified weapon: {oldWeapon.EditorID}");
+                    ++count;
+                    Console.WriteLine($"\tOldDmg:{oldWeapon.Data.Damage} NewDmg:{newWeapon.Data.Damage} Type:{oldWeapon.Data.Type}\n");
+                }
+                catch (Exception ex)
+                {
+                    throw RecordException.Enrich(ex, oldWeapon);
+                }
+            }
             
             Console.WriteLine($"For reference..\n");
             Console.WriteLine($"calcHealth(10):{calcHealth(10)}\n");
             Console.WriteLine($"calcHealth(75):{calcHealth(75)}\n");
             Console.WriteLine($"calcHealth(100):{calcHealth(100)}\n");
-            Console.WriteLine($"calcHealth(1000):{calcHealth(1000)}");
+            Console.WriteLine($"calcHealth(1000):{calcHealth(1000)}\n");
 
             Console.WriteLine($"\nFinished patching {count} records.\n");
         }

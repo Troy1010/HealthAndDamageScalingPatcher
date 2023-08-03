@@ -21,4 +21,12 @@ public class Settings
     [SettingName("NPC Health Squeeze Magnitude")]
     [Tooltip("Valid values are between 0 and infinity. Defines how powerful health squeezing is")]
     public float SqueezeHealthMagnitude = 1f;
+    
+    [SettingName("Melee Damage Mult")]
+    [Tooltip("Multiplies melee weapon damage before adding bonus")]
+    public float MeleeDmgMult = 0.85f;
+
+    [SettingName("Melee Damage Bonus")]
+    [Tooltip("Adds a bonus to melee weapon damage")]
+    public float MeleeDmgBonus = 6f;
 }
