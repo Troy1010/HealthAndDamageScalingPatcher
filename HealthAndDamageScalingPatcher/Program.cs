@@ -101,7 +101,7 @@ namespace HealthAndDamageScalingPatcher
             
             Console.WriteLine($"For reference..\n");
             Console.WriteLine($"calcHealth(10):{calcHealth(10)}\n");
-            Console.WriteLine($"calcHealth(75):{calcHealth(75)}\n");
+            Console.WriteLine($"calcHealth(75):{calcHealth(45)}\n");
             Console.WriteLine($"calcHealth(100):{calcHealth(100)}\n");
             Console.WriteLine($"calcHealth(1000):{calcHealth(1000)}\n");
 
@@ -112,23 +112,23 @@ namespace HealthAndDamageScalingPatcher
         {
             var healthRedefined = (float)health;
             
-            if (Settings.HealthMult != 0)
+            if (Settings.RootHealthMult != 0)
             {
-                healthRedefined *= Settings.HealthMult;
+                healthRedefined *= Settings.RootHealthMult;
                 Console.WriteLine($"health after mult:{healthRedefined}");
             }
             
-            if (Settings.HealthBonus != 0)
+            if (Settings.RootHealthBonus != 0)
             {
-                healthRedefined += Settings.HealthBonus;
+                healthRedefined += Settings.RootHealthBonus;
                 Console.WriteLine($"health after bonus:{healthRedefined}");
             }
 
-            if (Settings.SqueezeHealthTarget != 0 && Settings.SqueezeHealthMagnitude != 0)
+            if (Settings.SqueezeRootHealthTarget != 0 && Settings.SqueezeRootHealthMagnitude != 0)
             {
-                var difference = Settings.SqueezeHealthTarget - healthRedefined;
+                var difference = Settings.SqueezeRootHealthTarget - healthRedefined;
                 Console.WriteLine($"difference:{difference}");
-                var fraction = 1 / (1 + Math.Abs(difference) * Settings.SqueezeHealthMagnitude/1000);
+                var fraction = 1 / (1 + Math.Abs(difference) * Settings.SqueezeRootHealthMagnitude/1000);
                 Console.WriteLine($"fraction:{fraction}");
                 // fraction gets smaller as difference gets bigger
                 // (1 - fraction) gets bigger as difference gets bigger

@@ -6,21 +6,21 @@ public class Settings
 {
     [MaintainOrder]
 
-    [SettingName("NPC Health Multiplier")]
-    [Tooltip("Multiplies each npc's health before adding bonus")]
-    public float HealthMult = 0.5f;
+    [SettingName("NPC Root Health Multiplier")]
+    [Tooltip("Multiplies each npc's root health before adding bonus. Root health is used to calculate health using GameSettings")]
+    public float RootHealthMult = 0.5f;
 
     [SettingName("NPC Health Bonus")]
-    [Tooltip("Adds to each npc's health before squeezing")]
-    public float HealthBonus = 20f;
+    [Tooltip("Adds to each npc's root health before squeezing. Root health is used to calculate health using GameSettings")]
+    public float RootHealthBonus = 20f;
 
     [SettingName("NPC Health Squeeze Target")]
-    [Tooltip("All NPC health values become closer to this value")]
-    public float SqueezeHealthTarget = 60f;
+    [Tooltip("All NPC root health values become closer to this value. Root health is used to calculate health using GameSettings")]
+    public float SqueezeRootHealthTarget = 60f;
 
     [SettingName("NPC Health Squeeze Magnitude")]
     [Tooltip("Valid values are between 0 and infinity. Defines how powerful health squeezing is")]
-    public float SqueezeHealthMagnitude = 1f;
+    public float SqueezeRootHealthMagnitude = 1f;
     
     [SettingName("Melee Damage Mult")]
     [Tooltip("Multiplies melee weapon damage before adding bonus")]
