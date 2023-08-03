@@ -23,6 +23,7 @@ namespace HealthAndDamageScalingPatcher
         {
             Console.WriteLine("\n\nInitialization successful, beginning patcher process...\n");
             var count = 0;
+            // NPCs
             foreach (var oldNpc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
             {
                 try
@@ -38,7 +39,7 @@ namespace HealthAndDamageScalingPatcher
                     newNpc.Stats.Health = calcHealth(newNpc.Stats.Health);
 
                     state.PatchMod.Npcs.Set(newNpc);
-                    Console.WriteLine($"Successfully modified npc: {oldNpc.EditorID}");
+                    Console.WriteLine($"Successfully modified npc. EditorID:{newNpc.EditorID} Name:{newNpc.Name}");
                     ++count;
                     Console.WriteLine($"\tOldHealth:{oldNpc.Stats.Health} NewHealth:{newNpc.Stats.Health}\n");
                 }
@@ -47,9 +48,35 @@ namespace HealthAndDamageScalingPatcher
                     throw RecordException.Enrich(ex, oldNpc);
                 }
             }
+            // Creatures
+            foreach (var oldCreature in state.LoadOrder.PriorityOrder.WinningOverrides<ICreatureGetter>())
+            {
+                try
+                {
+                    if (oldCreature.Data?.Health == null || oldCreature.EditorID == null)
+                        continue;
+
+                    var newCreature = oldCreature.DeepCopy();
+                
+                    if (newCreature.Data?.Health == null || newCreature.Data.Health <= 1)
+                        continue;
+                    
+                    newCreature.Data.Health = calcHealth(newCreature.Data.Health);
+
+                    state.PatchMod.Creatures.Set(newCreature);
+                    Console.WriteLine($"Successfully modified creature. EditorID:{oldCreature.EditorID} Name:{oldCreature.Name}");
+                    ++count;
+                    Console.WriteLine($"\tOldHealth:{oldCreature.Data.Health} NewHealth:{newCreature.Data.Health}\n");
+                }
+                catch (Exception ex)
+                {
+                    throw RecordException.Enrich(ex, oldCreature);
+                }
+            }
             
             Console.WriteLine($"For reference..\n");
             Console.WriteLine($"calcHealth(10):{calcHealth(10)}\n");
+            Console.WriteLine($"calcHealth(75):{calcHealth(75)}\n");
             Console.WriteLine($"calcHealth(100):{calcHealth(100)}\n");
             Console.WriteLine($"calcHealth(1000):{calcHealth(1000)}");
 
