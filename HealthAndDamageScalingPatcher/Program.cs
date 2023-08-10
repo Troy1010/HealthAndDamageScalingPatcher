@@ -87,12 +87,17 @@ namespace HealthAndDamageScalingPatcher
 
                     var newWeapon = oldWeapon.DeepCopy();
 
-                    if (newWeapon.Data?.Damage == null || newWeapon.Data.Type == Weapon.WeaponType.Bow ||
-                        newWeapon.Data.Type == Weapon.WeaponType.Staff)
+                    if (newWeapon.Data?.Damage == null || newWeapon.Data.Type == Weapon.WeaponType.Staff)
                         continue;
 
                     newWeapon.Data.Damage =
-                        (ushort)(newWeapon.Data.Damage * Settings.MeleeDmgMult + Settings.MeleeDmgBonus);
+                        (ushort)SqueezeFormula(
+                            x: newWeapon.Data.Damage,
+                            minGuess: Settings.MeleeMinGuess,
+                            maxGuess: Settings.MeleeMaxGuess,
+                            minTarget: Settings.MeleeMinTarget,
+                            maxTarget: Settings.MeleeMaxTarget
+                        );
 
                     state.PatchMod.Weapons.Set(newWeapon);
                     Console.WriteLine($"Successfully modified weapon: {oldWeapon.EditorID}");
@@ -117,7 +122,8 @@ namespace HealthAndDamageScalingPatcher
 
         private static uint CalcHealth(uint health)
         {
-            var x = SqueezeFormula(health, Settings.HealthMinGuess, Settings.HealthMaxGuess, Settings.HealthMinTarget, Settings.HealthMaxTarget);
+            var x = SqueezeFormula(health, Settings.HealthMinGuess, Settings.HealthMaxGuess, Settings.HealthMinTarget,
+                Settings.HealthMaxTarget);
             return (uint)Math.Max(1, x.ToInt());
         }
 

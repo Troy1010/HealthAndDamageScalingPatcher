@@ -24,11 +24,23 @@ public class Settings
     [Tooltip("Used by Health Max Target")]
     public float HealthMaxGuess = 200f;
     
-    [SettingName("Melee Damage Mult")]
-    [Tooltip("Multiplies melee weapon damage before adding bonus")]
-    public float MeleeDmgMult = 0.85f;
-
-    [SettingName("Melee Damage Bonus")]
-    [Tooltip("Adds a bonus to melee weapon damage")]
-    public float MeleeDmgBonus = 6f;
+    [MaintainOrder]
+    [SettingName("Melee Min Target")]
+    [Tooltip("This is what 'Melee Min Guess' will become")]
+    public float MeleeMinTarget = 15f;
+    
+    [MaintainOrder]
+    [SettingName("Melee Max Target")]
+    [Tooltip("This is what 'Melee Max Guess' will become")]
+    public float MeleeMaxTarget = 30f;
+    
+    [MaintainOrder]
+    [SettingName("Melee Min Guess")]
+    [Tooltip("Used by Melee Min Target")]
+    public float MeleeMinGuess = 1f;
+    
+    [MaintainOrder]
+    [SettingName("Melee Max Guess")]
+    [Tooltip("Used by Melee Max Target")]
+    public float MeleeMaxGuess = 43f;
 }
