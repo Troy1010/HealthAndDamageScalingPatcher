@@ -1,7 +1,7 @@
 using Mutagen.Bethesda;
-using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Oblivion;
 using Mutagen.Bethesda.Plugins.Exceptions;
+using Mutagen.Bethesda.Synthesis;
 using Noggog;
 
 namespace HealthAndDamageScalingPatcher
@@ -10,6 +10,7 @@ namespace HealthAndDamageScalingPatcher
     {
         private static Lazy<Settings> _settings = null!;
         private static Settings Settings => _settings.Value;
+
         public static async Task<int> Main(string[] args)
         {
             return await SynthesisPipeline.Instance
@@ -32,11 +33,11 @@ namespace HealthAndDamageScalingPatcher
                         continue;
 
                     var newNpc = oldNpc.DeepCopy();
-                
+
                     if (newNpc.Stats?.Health == null || newNpc.Stats.Health <= 1)
                         continue;
-                    
-                    newNpc.Stats.Health = calcHealth(newNpc.Stats.Health);
+
+                    newNpc.Stats.Health = CalcHealth(newNpc.Stats.Health);
 
                     state.PatchMod.Npcs.Set(newNpc);
                     Console.WriteLine($"Successfully modified npc. EditorID:{newNpc.EditorID} Name:{newNpc.Name}");
@@ -48,6 +49,7 @@ namespace HealthAndDamageScalingPatcher
                     throw RecordException.Enrich(ex, oldNpc);
                 }
             }
+
             // Creatures
             foreach (var oldCreature in state.LoadOrder.PriorityOrder.WinningOverrides<ICreatureGetter>())
             {
@@ -57,14 +59,15 @@ namespace HealthAndDamageScalingPatcher
                         continue;
 
                     var newCreature = oldCreature.DeepCopy();
-                
+
                     if (newCreature.Data?.Health == null || newCreature.Data.Health <= 1)
                         continue;
-                    
-                    newCreature.Data.Health = calcHealth(newCreature.Data.Health);
+
+                    newCreature.Data.Health = CalcHealth(newCreature.Data.Health);
 
                     state.PatchMod.Creatures.Set(newCreature);
-                    Console.WriteLine($"Successfully modified creature. EditorID:{oldCreature.EditorID} Name:{oldCreature.Name}");
+                    Console.WriteLine(
+                        $"Successfully modified creature. EditorID:{oldCreature.EditorID} Name:{oldCreature.Name}");
                     ++count;
                     Console.WriteLine($"\tOldHealth:{oldCreature.Data.Health} NewHealth:{newCreature.Data.Health}\n");
                 }
@@ -73,6 +76,7 @@ namespace HealthAndDamageScalingPatcher
                     throw RecordException.Enrich(ex, oldCreature);
                 }
             }
+
             // Weapons
             foreach (var oldWeapon in state.LoadOrder.PriorityOrder.WinningOverrides<IWeaponGetter>())
             {
@@ -82,65 +86,44 @@ namespace HealthAndDamageScalingPatcher
                         continue;
 
                     var newWeapon = oldWeapon.DeepCopy();
-                
-                    if (newWeapon.Data?.Damage == null || newWeapon.Data.Type == Weapon.WeaponType.Bow || newWeapon.Data.Type == Weapon.WeaponType.Staff)
+
+                    if (newWeapon.Data?.Damage == null || newWeapon.Data.Type == Weapon.WeaponType.Bow ||
+                        newWeapon.Data.Type == Weapon.WeaponType.Staff)
                         continue;
 
-                    newWeapon.Data.Damage = (ushort)(newWeapon.Data.Damage * Settings.MeleeDmgMult + Settings.MeleeDmgBonus);
+                    newWeapon.Data.Damage =
+                        (ushort)(newWeapon.Data.Damage * Settings.MeleeDmgMult + Settings.MeleeDmgBonus);
 
                     state.PatchMod.Weapons.Set(newWeapon);
                     Console.WriteLine($"Successfully modified weapon: {oldWeapon.EditorID}");
                     ++count;
-                    Console.WriteLine($"\tOldDmg:{oldWeapon.Data.Damage} NewDmg:{newWeapon.Data.Damage} Type:{oldWeapon.Data.Type}\n");
+                    Console.WriteLine(
+                        $"\tOldDmg:{oldWeapon.Data.Damage} NewDmg:{newWeapon.Data.Damage} Type:{oldWeapon.Data.Type}\n");
                 }
                 catch (Exception ex)
                 {
                     throw RecordException.Enrich(ex, oldWeapon);
                 }
             }
-            
+
             Console.WriteLine($"For reference..\n");
-            Console.WriteLine($"calcHealth(10):{calcHealth(10)}\n");
-            Console.WriteLine($"calcHealth(75):{calcHealth(45)}\n");
-            Console.WriteLine($"calcHealth(100):{calcHealth(100)}\n");
-            Console.WriteLine($"calcHealth(1000):{calcHealth(1000)}\n");
+            Console.WriteLine($"calcHealth(10):{CalcHealth(10)}\n");
+            Console.WriteLine($"calcHealth(75):{CalcHealth(45)}\n");
+            Console.WriteLine($"calcHealth(100):{CalcHealth(100)}\n");
+            Console.WriteLine($"calcHealth(1000):{CalcHealth(1000)}\n");
 
             Console.WriteLine($"\nFinished patching {count} records.\n");
         }
 
-        private static uint calcHealth(uint health)
+        private static uint CalcHealth(uint health)
         {
-            var healthRedefined = (float)health;
-            
-            if (Settings.RootHealthMult != 0)
-            {
-                healthRedefined *= Settings.RootHealthMult;
-                Console.WriteLine($"health after mult:{healthRedefined}");
-            }
-            
-            if (Settings.RootHealthBonus != 0)
-            {
-                healthRedefined += Settings.RootHealthBonus;
-                Console.WriteLine($"health after bonus:{healthRedefined}");
-            }
+            var x = SqueezeFormula(health, Settings.HealthMinGuess, Settings.HealthMaxGuess, Settings.HealthMinTarget, Settings.HealthMaxTarget);
+            return (uint)Math.Max(1, x.ToInt());
+        }
 
-            if (Settings.SqueezeRootHealthTarget != 0 && Settings.SqueezeRootHealthMagnitude != 0)
-            {
-                var difference = Settings.SqueezeRootHealthTarget - healthRedefined;
-                Console.WriteLine($"difference:{difference}");
-                var fraction = 1 / (1 + Math.Abs(difference) * Settings.SqueezeRootHealthMagnitude/1000);
-                Console.WriteLine($"fraction:{fraction}");
-                // fraction gets smaller as difference gets bigger
-                // (1 - fraction) gets bigger as difference gets bigger
-                var oneMinusFraction = 1 - fraction;
-                Console.WriteLine($"oneMinusFraction:{oneMinusFraction}");
-                var differenceTimesOneMinusFraction = difference * oneMinusFraction;
-                Console.WriteLine($"differenceTimesOneMinusFraction:{differenceTimesOneMinusFraction}");
-                healthRedefined += differenceTimesOneMinusFraction;
-                Console.WriteLine($"health after squeeze:{healthRedefined}");
-            }
-
-            return (uint)Math.Max(1, healthRedefined.ToInt());
+        private static float SqueezeFormula(float x, float minGuess, float maxGuess, float minTarget, float maxTarget)
+        {
+            return Math.Max(0, (x - minGuess) / (maxGuess - minGuess)) * (maxTarget - minTarget) + minTarget;
         }
     }
 }
