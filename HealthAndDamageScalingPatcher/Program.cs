@@ -24,56 +24,60 @@ namespace HealthAndDamageScalingPatcher
         {
             Console.WriteLine("\n\nInitialization successful, beginning patcher process...\n");
             var count = 0;
-            // NPCs
-            foreach (var oldNpc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
+            if (Settings.FeatureHealth)
             {
-                try
+                // NPCs
+                foreach (var oldNpc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
                 {
-                    if (oldNpc.Stats?.Health == null || oldNpc.EditorID == null)
-                        continue;
+                    try
+                    {
+                        if (oldNpc.Stats?.Health == null || oldNpc.EditorID == null)
+                            continue;
 
-                    var newNpc = oldNpc.DeepCopy();
+                        var newNpc = oldNpc.DeepCopy();
 
-                    if (newNpc.Stats?.Health == null || newNpc.Stats.Health <= 1)
-                        continue;
+                        if (newNpc.Stats?.Health == null || newNpc.Stats.Health <= 1)
+                            continue;
 
-                    newNpc.Stats.Health = CalcHealth(newNpc.Stats.Health);
+                        newNpc.Stats.Health = CalcHealth(newNpc.Stats.Health);
 
-                    state.PatchMod.Npcs.Set(newNpc);
-                    Console.WriteLine($"Successfully modified npc. EditorID:{newNpc.EditorID} Name:{newNpc.Name}");
-                    ++count;
-                    Console.WriteLine($"\tOldHealth:{oldNpc.Stats.Health} NewHealth:{newNpc.Stats.Health}\n");
+                        state.PatchMod.Npcs.Set(newNpc);
+                        Console.WriteLine($"Successfully modified npc. EditorID:{newNpc.EditorID} Name:{newNpc.Name}");
+                        ++count;
+                        Console.WriteLine($"\tOldHealth:{oldNpc.Stats.Health} NewHealth:{newNpc.Stats.Health}\n");
+                    }
+                    catch (Exception ex)
+                    {
+                        throw RecordException.Enrich(ex, oldNpc);
+                    }
                 }
-                catch (Exception ex)
+
+                // Creatures
+                foreach (var oldCreature in state.LoadOrder.PriorityOrder.WinningOverrides<ICreatureGetter>())
                 {
-                    throw RecordException.Enrich(ex, oldNpc);
-                }
-            }
+                    try
+                    {
+                        if (oldCreature.Data?.Health == null || oldCreature.EditorID == null)
+                            continue;
 
-            // Creatures
-            foreach (var oldCreature in state.LoadOrder.PriorityOrder.WinningOverrides<ICreatureGetter>())
-            {
-                try
-                {
-                    if (oldCreature.Data?.Health == null || oldCreature.EditorID == null)
-                        continue;
+                        var newCreature = oldCreature.DeepCopy();
 
-                    var newCreature = oldCreature.DeepCopy();
+                        if (newCreature.Data?.Health == null || newCreature.Data.Health <= 1)
+                            continue;
 
-                    if (newCreature.Data?.Health == null || newCreature.Data.Health <= 1)
-                        continue;
+                        newCreature.Data.Health = CalcHealth(newCreature.Data.Health);
 
-                    newCreature.Data.Health = CalcHealth(newCreature.Data.Health);
-
-                    state.PatchMod.Creatures.Set(newCreature);
-                    Console.WriteLine(
-                        $"Successfully modified creature. EditorID:{oldCreature.EditorID} Name:{oldCreature.Name}");
-                    ++count;
-                    Console.WriteLine($"\tOldHealth:{oldCreature.Data.Health} NewHealth:{newCreature.Data.Health}\n");
-                }
-                catch (Exception ex)
-                {
-                    throw RecordException.Enrich(ex, oldCreature);
+                        state.PatchMod.Creatures.Set(newCreature);
+                        Console.WriteLine(
+                            $"Successfully modified creature. EditorID:{oldCreature.EditorID} Name:{oldCreature.Name}");
+                        ++count;
+                        Console.WriteLine(
+                            $"\tOldHealth:{oldCreature.Data.Health} NewHealth:{newCreature.Data.Health}\n");
+                    }
+                    catch (Exception ex)
+                    {
+                        throw RecordException.Enrich(ex, oldCreature);
+                    }
                 }
             }
 

@@ -5,6 +5,11 @@ namespace HealthAndDamageScalingPatcher;
 public class Settings
 {
     [MaintainOrder]
+    [SettingName("Feature Health")]
+    [Tooltip("Enables or disables health adjustments")]
+    public bool FeatureHealth = false;
+    
+    [MaintainOrder]
     [SettingName("Health Min Target")]
     [Tooltip("This is what 'Health Min Guess' will become")]
     public float HealthMinTarget = 30f;
